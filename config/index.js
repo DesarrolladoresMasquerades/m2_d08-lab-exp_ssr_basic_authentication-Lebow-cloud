@@ -7,11 +7,14 @@ const logger = require("morgan");
 
 // ℹ️ Needed when we deal with cookies (we will when dealing with authentication)
 // https://www.npmjs.com/package/cookie-parser
-const cookieParser = require("cookie-parser");
+
 
 // ℹ️ Serves a custom favicon on each request
 // https://www.npmjs.com/package/serve-favicon
 const favicon = require("serve-favicon");
+const cookieParser = require("cookie-parser");
+const MongoStore = require("connect-mongo");
+const session = require("express-session");
 
 // ℹ️ global package used to `normalize` paths amongst different operating systems
 // https://www.npmjs.com/package/path
@@ -36,4 +39,18 @@ module.exports = (app) => {
 
   // Handles access to the favicon
   app.use(favicon(path.join(__dirname, "..", "public", "images", "favicon.ico")));
-};
+  app.use(session({
+    secret: process.env.COOKIE_SECRET,
+    saveUninitialized: false,
+    resave: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      ttl: 24 * 60 * 60
+    }),
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000, //one day old
+    }
+  }))
+}
+
+
